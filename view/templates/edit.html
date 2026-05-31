@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}
+레시피 수정
+{% endblock %}
+
+{% block content %}
+
+{% if recipe %}
+
+<section class="page-title">
+  <h2>레시피 수정</h2>
+  <p>기존 레시피 정보를 수정합니다.</p>
+</section>
+
+{% if error %}
+<p class="error-message">{{ error }}</p>
+{% endif %}
+
+<form method="POST"
+      action="{{ url_for('edit_recipe', id=recipe[0]) }}"
+      class="recipe-form"
+      enctype="multipart/form-data">
+
+  <label for="title">요리 이름</label>
+  <input type="text"
+         id="title"
+         name="title"
+         value="{{ recipe[1] }}"
+         required>
+
+  <label for="category">카테고리</label>
+  <select id="category" name="category" required>
+    <option value="한식" {% if recipe[2] == '한식' %}selected{% endif %}>한식</option>
+    <option value="중식" {% if recipe[2] == '중식' %}selected{% endif %}>중식</option>
+    <option value="일식" {% if recipe[2] == '일식' %}selected{% endif %}>일식</option>
+    <option value="양식" {% if recipe[2] == '양식' %}selected{% endif %}>양식</option>
+    <option value="디저트" {% if recipe[2] == '디저트' %}selected{% endif %}>디저트</option>
+    <option value="기타" {% if recipe[2] == '기타' %}selected{% endif %}>기타</option>
+  </select>
+
+  <label for="ingredients">재료</label>
+  <textarea id="ingredients"
+            name="ingredients"
+            rows="5"
+            placeholder="예: 김치, 돼지고기, 두부, 대파, 마늘"
+            required>{{ recipe[3] }}</textarea>
+
+  <label for="instructions">조리 방법</label>
+  <textarea id="instructions"
+            name="instructions"
+            rows="8"
+            placeholder="조리 순서를 입력하세요."
+            required>{{ recipe[4] }}</textarea>
+
+  {% if recipe_image %}
+  <div class="detail-item">
+    <strong>현재 첨부된 사진</strong>
+    <p>
+      <img src="{{ url_for('static', filename='uploads/' + recipe_image[2]) }}"
+           alt="현재 레시피 사진"
+           style="max-width: 300px; border-radius: 8px;">
+    </p>
+  </div>
+  {% endif %}
+
+  <label for="recipe_image">새 조리 사진 첨부</label>
+  <input type="file"
+         id="recipe_image"
+         name="recipe_image"
+         accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
+
+  <label for="cooking_time">조리 시간</label>
+  <input type="number"
+         id="cooking_time"
+         name="cooking_time"
+         value="{{ recipe[5] }}"
+         min="1"
+         max="360"
+         step="1"
+         required>
+
+  <label for="difficulty">난이도</label>
+  <select id="difficulty" name="difficulty" required>
+    <option value="쉬움" {% if recipe[6] == '쉬움' %}selected{% endif %}>쉬움</option>
+    <option value="보통" {% if recipe[6] == '보통' %}selected{% endif %}>보통</option>
+    <option value="어려움" {% if recipe[6] == '어려움' %}selected{% endif %}>어려움</option>
+  </select>
+
+  <div class="form-buttons">
+    <button type="submit" class="btn">수정 완료</button>
+    <a href="{{ url_for('detail_recipe', id=recipe[0]) }}" class="btn cancel">취소</a>
+  </div>
+
+</form>
+
+{% else %}
+
+<section class="page-title">
+  <h2>레시피를 찾을 수 없습니다.</h2>
+  <p>수정하려는 레시피가 존재하지 않습니다.</p>
+</section>
+
+<a class="btn" href="{{ url_for('index') }}">목록으로 돌아가기</a>
+
+{% endif %}
+
+{% endblock %}

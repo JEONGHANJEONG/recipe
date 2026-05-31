@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}
+관리자 페이지
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+  <h2>관리자 페이지</h2>
+  <p>관리자는 모든 회원과 모든 레시피를 확인하고 관리할 수 있습니다.</p>
+</section>
+
+<div class="button-box">
+  <a href="{{ url_for('admin_reports') }}" class="btn">
+    신고 목록 보기
+  </a>
+</div>
+
+<h3>회원 목록</h3>
+
+<table>
+  <thead>
+  <tr>
+    <th>회원번호</th>
+    <th>이름</th>
+    <th>이메일</th>
+    <th>권한</th>
+    <th>가입일</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  {% if users %}
+  {% for user in users %}
+  <tr>
+    <td>{{ user[0] }}</td>
+    <td>{{ user[1] }}</td>
+    <td>{{ user[2] }}</td>
+    <td>{{ user[3] }}</td>
+    <td>{{ user[4] }}</td>
+  </tr>
+  {% endfor %}
+  {% else %}
+  <tr>
+    <td colspan="5">가입된 회원이 없습니다.</td>
+  </tr>
+  {% endif %}
+  </tbody>
+</table>
+
+<h3 style="margin-top: 40px;">전체 레시피 목록</h3>
+
+<table>
+  <thead>
+  <tr>
+    <th>번호</th>
+    <th>요리명</th>
+    <th>카테고리</th>
+    <th>작성자</th>
+    <th>난이도</th>
+    <th>조리시간</th>
+    <th>추천 수</th>
+    <th>등록일</th>
+    <th>관리</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  {% if recipes %}
+  {% for recipe in recipes %}
+  <tr>
+    <td>{{ recipe[0] }}</td>
+    <td>{{ recipe[1] }}</td>
+    <td>{{ recipe[2] }}</td>
+
+    <td>
+      {% if recipe[9] %}
+      {{ recipe[9] }}
+      {% else %}
+      작성자 없음
+      {% endif %}
+    </td>
+
+    <td>{{ recipe[6] }}</td>
+    <td>{{ recipe[5] }}분</td>
+    <td>{{ recipe[10] }}개</td>
+    <td>{{ recipe[7] }}</td>
+
+    <td>
+      <a class="small-btn"
+         href="{{ url_for('detail_recipe', id=recipe[0]) }}">
+        상세
+      </a>
+
+      <a class="small-btn edit"
+         href="{{ url_for('edit_recipe', id=recipe[0]) }}">
+        수정
+      </a>
+
+      <a class="small-btn delete"
+         href="{{ url_for('delete_recipe', id=recipe[0]) }}"
+         onclick="return confirm('정말 삭제하시겠습니까?');">
+        삭제
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+  {% else %}
+  <tr>
+    <td colspan="9">등록된 레시피가 없습니다.</td>
+  </tr>
+  {% endif %}
+  </tbody>
+</table>
+
+<h3 style="margin-top: 40px;">전체 댓글 목록</h3>
+
+<table>
+  <thead>
+  <tr>
+    <th>댓글번호</th>
+    <th>레시피</th>
+    <th>작성자</th>
+    <th>댓글 내용</th>
+    <th>작성일</th>
+    <th>관리</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  {% if comments %}
+  {% for comment in comments %}
+  <tr>
+    <td>{{ comment[0] }}</td>
+
+    <td>
+      {% if comment[7] %}
+      {{ comment[7] }}
+      {% else %}
+      삭제된 레시피
+      {% endif %}
+    </td>
+
+    <td>
+      {% if comment[6] %}
+      {{ comment[6] }}
+      {% else %}
+      알 수 없음
+      {% endif %}
+    </td>
+
+    <td>{{ comment[3] }}</td>
+    <td>{{ comment[4] }}</td>
+
+    <td>
+      <a class="small-btn delete"
+         href="{{ url_for('delete_comment', comment_id=comment[0]) }}"
+         onclick="return confirm('댓글을 삭제하시겠습니까?');">
+        삭제
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+  {% else %}
+  <tr>
+    <td colspan="6">등록된 댓글이 없습니다.</td>
+  </tr>
+  {% endif %}
+  </tbody>
+</table>
+
+{% endblock %}

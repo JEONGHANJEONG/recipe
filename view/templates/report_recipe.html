@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}
+레시피 신고
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+    <h2>레시피 신고</h2>
+    <p>문제가 있는 레시피를 관리자에게 신고할 수 있습니다.</p>
+</section>
+
+<div class="detail-card">
+
+    <div class="detail-item">
+        <strong>신고할 레시피</strong>
+        <p>{{ recipe[1] }}</p>
+    </div>
+
+    <div class="detail-item">
+        <strong>작성자</strong>
+        <p>
+            {% if recipe[9] %}
+            {{ recipe[9] }}
+            {% else %}
+            작성자 없음
+            {% endif %}
+        </p>
+    </div>
+
+</div>
+
+{% if error %}
+<p class="error-message">{{ error }}</p>
+{% endif %}
+
+{% if already_reported %}
+<p class="error-message">
+    이미 신고한 레시피입니다.
+</p>
+
+<div class="form-buttons">
+    <a href="{{ url_for('detail_recipe', id=recipe[0]) }}" class="btn cancel">
+        상세보기로 돌아가기
+    </a>
+</div>
+{% else %}
+
+<form method="POST"
+      action="{{ url_for('report_recipe', recipe_id=recipe[0]) }}"
+      class="recipe-form">
+
+    <label for="reason">신고 사유</label>
+    <select id="reason" name="reason" required>
+        <option value="부적절한 내용">부적절한 내용</option>
+        <option value="허위 정보">허위 정보</option>
+        <option value="저작권 문제">저작권 문제</option>
+        <option value="욕설/비방">욕설/비방</option>
+        <option value="광고/스팸">광고/스팸</option>
+        <option value="기타">기타</option>
+    </select>
+
+    <label for="detail">신고 내용</label>
+    <textarea id="detail"
+              name="detail"
+              rows="7"
+              placeholder="신고 내용을 자세히 작성해주세요."
+              required></textarea>
+
+    <div class="form-buttons">
+        <button type="submit"
+                class="btn"
+                onclick="return confirm('이 레시피를 신고하시겠습니까?');">
+            신고 접수
+        </button>
+
+        <a href="{{ url_for('detail_recipe', id=recipe[0]) }}" class="btn cancel">
+            취소
+        </a>
+    </div>
+
+</form>
+
+{% endif %}
+
+{% endblock %}

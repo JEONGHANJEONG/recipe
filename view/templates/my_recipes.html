@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}
+내 레시피
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+    <h2>내 레시피</h2>
+    <p>내가 직접 등록한 레시피만 모아서 볼 수 있습니다.</p>
+</section>
+
+<div class="button-box">
+    <a class="btn" href="{{ url_for('add_recipe') }}">+ 새 레시피 추가</a>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>요리명</th>
+        <th>카테고리</th>
+        <th>난이도</th>
+        <th>조리시간</th>
+        <th>등록일</th>
+        <th>관리</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% if recipes %}
+    {% for recipe in recipes %}
+    <tr>
+        <td>{{ recipe[0] }}</td>
+        <td>{{ recipe[1] }}</td>
+        <td>{{ recipe[2] }}</td>
+        <td>{{ recipe[6] }}</td>
+        <td>{{ recipe[5] }}분</td>
+        <td>{{ recipe[7] }}</td>
+
+        <td>
+            <a class="small-btn"
+               href="{{ url_for('detail_recipe', id=recipe[0]) }}">
+                상세
+            </a>
+
+            <a class="small-btn edit"
+               href="{{ url_for('edit_recipe', id=recipe[0]) }}">
+                수정
+            </a>
+
+            <a class="small-btn delete"
+               href="{{ url_for('delete_recipe', id=recipe[0]) }}"
+               onclick="return confirm('정말 삭제하시겠습니까?');">
+                삭제
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+        <td colspan="7">
+            아직 등록한 레시피가 없습니다.
+        </td>
+    </tr>
+    {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,434 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "맑은 고딕", sans-serif;
+    background-color: #f8f5f0;
+    color: #333;
+}
+
+header {
+    background-color: #ff8c42;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0 0 10px 0;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+main {
+    width: 90%;
+    max-width: 1100px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.page-title {
+    margin-bottom: 25px;
+}
+
+.page-title h2 {
+    margin-bottom: 5px;
+    color: #ff7a1a;
+}
+
+.button-box {
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #ff8c42;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background-color: #e87528;
+}
+
+.cancel {
+    background-color: #777;
+}
+
+.cancel:hover {
+    background-color: #555;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table th {
+    background-color: #ffe2c6;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+table tr:hover {
+    background-color: #fff7ef;
+}
+
+.small-btn {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 2px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.small-btn:hover {
+    background-color: #217dbb;
+}
+
+.small-btn.edit {
+    background-color: #2ecc71;
+}
+
+.small-btn.edit:hover {
+    background-color: #27ae60;
+}
+
+.small-btn.delete {
+    background-color: #e74c3c;
+}
+
+.small-btn.delete:hover {
+    background-color: #c0392b;
+}
+
+.recipe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recipe-form label {
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.recipe-form input,
+.recipe-form select,
+.recipe-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.recipe-form textarea {
+    resize: vertical;
+}
+
+.form-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.detail-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    background-color: #fffdf9;
+}
+
+.detail-item {
+    margin-bottom: 18px;
+}
+
+.detail-item strong {
+    display: block;
+    color: #ff7a1a;
+    margin-bottom: 5px;
+}
+
+.detail-item p {
+    margin: 0;
+}
+
+.text-box {
+    white-space: pre-line;
+    line-height: 1.6;
+    background-color: #f9f9f9;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+footer {
+    text-align: center;
+    color: #777;
+    padding: 20px;
+    font-size: 14px;
+}
+.search-filter-form {
+    background-color: #fff7ef;
+    border: 1px solid #ffd2aa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-item label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #ff7a1a;
+}
+
+.filter-item input,
+.filter-item select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.filter-buttons {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+}
+
+/* 화면이 작을 때 필터를 세로로 배치 */
+@media (max-width: 800px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ingredient-filter-box {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ingredient-filter-box label {
+    font-weight: bold;
+    color: #ff7a1a;
+}
+
+.ingredient-filter-box textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    resize: vertical;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #333 !important;
+    font-weight: normal !important;
+}
+
+.checkbox-label input {
+    width: auto;
+}
+.filter-item input[type="range"] {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.filter-item input[type="number"] {
+    margin-top: 8px;
+}
+.login-user {
+    margin-left: 10px;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.error-message {
+    background-color: #ffe0e0;
+    color: #c0392b;
+    border: 1px solid #ffb3b3;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+.section-line {
+    margin: 35px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+.comment-section h3 {
+    color: #ff7a1a;
+    margin-bottom: 15px;
+}
+
+.comment-form {
+    background-color: #fff7ef;
+    border: 1px solid #ffd2aa;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.comment-form label {
+    display: block;
+    font-weight: bold;
+    color: #ff7a1a;
+    margin-bottom: 8px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+.login-notice {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 14px;
+    border-radius: 8px;
+}
+
+.login-notice a {
+    color: #ff7a1a;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.comment-list {
+    margin-top: 20px;
+}
+
+.comment-card {
+    border: 1px solid #ddd;
+    background-color: #fffdf9;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.comment-header strong {
+    color: #333;
+}
+
+.comment-header span {
+    font-size: 13px;
+    color: #888;
+}
+
+.comment-content {
+    white-space: pre-line;
+    line-height: 1.6;
+    margin: 0 0 10px 0;
+}
+
+.comment-updated {
+    display: block;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.comment-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.empty-comment {
+    color: #777;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 14px;
+    border-radius: 8px;
+}
+.recommend-box {
+    margin-top: 25px;
+    margin-bottom: 25px;
+    background-color: #fff7ef;
+    border: 1px solid #ffd2aa;
+    padding: 18px;
+    border-radius: 10px;
+}
+
+.recommend-box h3 {
+    margin-top: 0;
+    color: #ff7a1a;
+}
+
+.recommend-count {
+    font-size: 17px;
+    margin-bottom: 15px;
+}
+
+.recommend-count strong {
+    color: #e87528;
+    font-size: 22px;
+}

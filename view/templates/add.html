@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}
+레시피 추가
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+  <h2>레시피 추가</h2>
+  <p>새로운 요리 레시피를 등록합니다.</p>
+</section>
+
+{% if error %}
+<p class="error-message">{{ error }}</p>
+{% endif %}
+
+<form method="POST"
+      action="{{ url_for('add_recipe') }}"
+      class="recipe-form"
+      enctype="multipart/form-data">
+
+  <label for="title">요리 이름</label>
+  <input type="text"
+         id="title"
+         name="title"
+         placeholder="예: 김치찌개"
+         required>
+
+  <label for="category">카테고리</label>
+  <select id="category" name="category" required>
+    <option value="한식">한식</option>
+    <option value="중식">중식</option>
+    <option value="일식">일식</option>
+    <option value="양식">양식</option>
+    <option value="디저트">디저트</option>
+    <option value="기타">기타</option>
+  </select>
+
+  <label for="ingredients">재료</label>
+  <textarea id="ingredients"
+            name="ingredients"
+            rows="5"
+            placeholder="예: 김치, 돼지고기, 두부, 대파, 마늘, 고춧가루"
+            required></textarea>
+
+  <label for="instructions">조리 방법</label>
+  <textarea id="instructions"
+            name="instructions"
+            rows="8"
+            placeholder="조리 순서를 입력하세요."
+            required></textarea>
+
+  <label for="recipe_image">조리 사진 첨부</label>
+  <input type="file"
+         id="recipe_image"
+         name="recipe_image"
+         accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
+
+  <label for="cooking_time">조리 시간</label>
+  <input type="number"
+         id="cooking_time"
+         name="cooking_time"
+         placeholder="예: 30"
+         min="1"
+         max="360"
+         step="1"
+         required>
+
+  <label for="difficulty">난이도</label>
+  <select id="difficulty" name="difficulty" required>
+    <option value="쉬움">쉬움</option>
+    <option value="보통">보통</option>
+    <option value="어려움">어려움</option>
+  </select>
+
+  <div class="form-buttons">
+    <button type="submit" class="btn">등록하기</button>
+    <a href="{{ url_for('index') }}" class="btn cancel">취소</a>
+  </div>
+
+</form>
+
+{% endblock %}

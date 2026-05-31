@@ -1,0 +1,38 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Flask / environment
+.env
+*.env
+instance/
+
+# SQLite database
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploaded images
+view/static/uploads/*
+!view/static/uploads/.gitkeep
+
+# Local command files
+*.cmd
+*.bat
+
+# OS files
+.DS_Store
+Thumbs.db

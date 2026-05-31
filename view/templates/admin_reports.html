@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}
+신고 목록
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+    <h2>신고 목록</h2>
+    <p>이용자들이 신고한 레시피 내역을 확인할 수 있습니다.</p>
+</section>
+
+<div class="button-box">
+    <a href="{{ url_for('admin_page') }}" class="btn cancel">
+        관리자 페이지로 돌아가기
+    </a>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>신고번호</th>
+        <th>레시피</th>
+        <th>레시피 작성자</th>
+        <th>신고자</th>
+        <th>신고 사유</th>
+        <th>신고 내용</th>
+        <th>상태</th>
+        <th>신고일</th>
+        <th>처리일</th>
+        <th>관리</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% if reports %}
+    {% for report in reports %}
+    <tr>
+        <td>{{ report[0] }}</td>
+
+        <td>
+            {% if report[8] %}
+            <a href="{{ url_for('detail_recipe', id=report[1]) }}">
+                {{ report[8] }}
+            </a>
+            {% else %}
+            삭제된 레시피
+            {% endif %}
+        </td>
+
+        <td>
+            {% if report[10] %}
+            {{ report[10] }}
+            {% else %}
+            작성자 없음
+            {% endif %}
+        </td>
+
+        <td>
+            {% if report[9] %}
+            {{ report[9] }}
+            {% else %}
+            알 수 없음
+            {% endif %}
+        </td>
+
+        <td>{{ report[3] }}</td>
+
+        <td class="text-box">
+            {{ report[4] }}
+        </td>
+
+        <td>{{ report[5] }}</td>
+
+        <td>{{ report[6] }}</td>
+
+        <td>
+            {% if report[7] %}
+            {{ report[7] }}
+            {% else %}
+            -
+            {% endif %}
+        </td>
+
+        <td>
+            <form method="POST"
+                  action="{{ url_for('update_report_status', report_id=report[0]) }}">
+
+                <select name="status">
+                    <option value="접수" {% if report[5] == '접수' %}selected{% endif %}>접수</option>
+                    <option value="처리중" {% if report[5] == '처리중' %}selected{% endif %}>처리중</option>
+                    <option value="처리완료" {% if report[5] == '처리완료' %}selected{% endif %}>처리완료</option>
+                </select>
+
+                <button type="submit" class="small-btn edit">
+                    변경
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+        <td colspan="10">
+            접수된 신고가 없습니다.
+        </td>
+    </tr>
+    {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}

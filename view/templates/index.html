@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}
+레시피 목록
+{% endblock %}
+
+{% block content %}
+
+<section class="page-title">
+    <h2>레시피 목록</h2>
+    <p>등록된 요리 레시피를 검색하고 필터링할 수 있습니다.</p>
+</section>
+
+<form method="GET" action="{{ url_for('index') }}" class="search-filter-form">
+
+    <div class="filter-row">
+
+        <div class="filter-item">
+            <label for="keyword">검색어</label>
+            <input type="text"
+                   id="keyword"
+                   name="keyword"
+                   placeholder="요리명, 재료, 조리방법 검색"
+                   value="{{ keyword }}">
+        </div>
+
+        <div class="filter-item">
+            <label for="category">카테고리</label>
+            <select id="category" name="category">
+                <option value="">전체</option>
+                <option value="한식" {% if category == '한식' %}selected{% endif %}>한식</option>
+                <option value="중식" {% if category == '중식' %}selected{% endif %}>중식</option>
+                <option value="일식" {% if category == '일식' %}selected{% endif %}>일식</option>
+                <option value="양식" {% if category == '양식' %}selected{% endif %}>양식</option>
+                <option value="디저트" {% if category == '디저트' %}selected{% endif %}>디저트</option>
+                <option value="기타" {% if category == '기타' %}selected{% endif %}>기타</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="difficulty">난이도</label>
+            <select id="difficulty" name="difficulty">
+                <option value="">전체</option>
+                <option value="쉬움" {% if difficulty == '쉬움' %}selected{% endif %}>쉬움</option>
+                <option value="보통" {% if difficulty == '보통' %}selected{% endif %}>보통</option>
+                <option value="어려움" {% if difficulty == '어려움' %}selected{% endif %}>어려움</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label for="max_time">
+                조리시간: <span id="timeValue">{{ max_time }}</span>분 이하
+            </label>
+
+            <input type="range"
+                   id="max_time"
+                   name="max_time"
+                   min="1"
+                   max="360"
+                   step="1"
+                   value="{{ max_time }}">
+
+            <input type="number"
+                   id="max_time_number"
+                   min="1"
+                   max="360"
+                   step="1"
+                   value="{{ max_time }}">
+        </div>
+
+    </div>
+
+    <div class="ingredient-filter-box">
+        <label for="my_ingredients">내가 현재 가지고 있는 재료</label>
+
+        <textarea id="my_ingredients"
+                  name="my_ingredients"
+                  rows="3"
+                  placeholder="예: 김치, 돼지고기, 두부, 대파, 마늘">{{ my_ingredients }}</textarea>
+
+        <label class="checkbox-label">
+            <input type="checkbox"
+                   name="available_filter"
+                   value="on"
+                   {% if available_filter == 'on' %}checked{% endif %}>
+            내가 가진 재료가 레시피 재료의 70% 이상인 요리만 보기
+        </label>
+    </div>
+
+    <div class="filter-buttons">
+        <button type="submit" class="btn">검색 / 필터 적용</button>
+        <a href="{{ url_for('index') }}" class="btn cancel">초기화</a>
+    </div>
+
+</form>
+
+{% if session.get("user_id") %}
+<div class="button-box">
+    <a class="btn" href="{{ url_for('add_recipe') }}">+ 레시피 추가</a>
+</div>
+{% endif %}
+
+<table>
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>요리명</th>
+        <th>카테고리</th>
+        <th>작성자</th>
+        <th>난이도</th>
+        <th>조리시간</th>
+        <th>추천 수</th>
+
+        {% if my_ingredients %}
+        <th>재료 일치율</th>
+        {% endif %}
+
+        <th>등록일</th>
+        <th>관리</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% if recipes %}
+    {% for recipe in recipes %}
+    <tr>
+        <td>{{ recipe[0] }}</td>
+        <td>{{ recipe[1] }}</td>
+        <td>{{ recipe[2] }}</td>
+
+        <td>
+            {% if recipe[9] %}
+            {{ recipe[9] }}
+            {% else %}
+            작성자 없음
+            {% endif %}
+        </td>
+
+        <td>{{ recipe[6] }}</td>
+        <td>{{ recipe[5] }}분</td>
+        <td>{{ recipe[10] }}개</td>
+
+        {% if my_ingredients %}
+        <td>
+            {{ match_info[recipe[0]]["percent"] }}%
+            <br>
+            <small>
+                {{ match_info[recipe[0]]["matched_count"] }}
+                /
+                {{ match_info[recipe[0]]["total_count"] }}개 일치
+            </small>
+        </td>
+        {% endif %}
+
+        <td>{{ recipe[7] }}</td>
+
+        <td>
+            <a class="small-btn"
+               href="{{ url_for('detail_recipe', id=recipe[0]) }}">
+                상세
+            </a>
+
+            {% if current_user and (current_user[4] == 'admin' or recipe[8] == current_user[0]) %}
+            <a class="small-btn edit"
+               href="{{ url_for('edit_recipe', id=recipe[0]) }}">
+                수정
+            </a>
+
+            <a class="small-btn delete"
+               href="{{ url_for('delete_recipe', id=recipe[0]) }}"
+               onclick="return confirm('정말 삭제하시겠습니까?');">
+                삭제
+            </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+        <td colspan="{% if my_ingredients %}10{% else %}9{% endif %}">
+            조건에 맞는 레시피가 없습니다.
+        </td>
+    </tr>
+    {% endif %}
+    </tbody>
+</table>
+
+<script>
+    const timeRange = document.getElementById("max_time");
+    const timeNumber = document.getElementById("max_time_number");
+    const timeValue = document.getElementById("timeValue");
+
+    timeRange.addEventListener("input", function () {
+        timeNumber.value = timeRange.value;
+        timeValue.textContent = timeRange.value;
+    });
+
+    timeNumber.addEventListener("input", function () {
+        let value = parseInt(timeNumber.value);
+
+        if (isNaN(value)) {
+            value = 1;
+        }
+
+        if (value < 1) {
+            value = 1;
+        }
+
+        if (value > 360) {
+            value = 360;
+        }
+
+        timeNumber.value = value;
+        timeRange.value = value;
+        timeValue.textContent = value;
+    });
+</script>
+
+{% endblock %}
