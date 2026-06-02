@@ -16,6 +16,7 @@
         {% if session.get("user_id") %}
         <a href="{{ url_for('add_recipe') }}">레시피 추가</a>
         <a href="{{ url_for('my_recipes') }}">내 레시피</a>
+        <a href="{{ url_for('my_recommendations') }}">내 추천 레시피</a>
 
         {% if session.get("role") == "admin" %}
         <a href="{{ url_for('admin_page') }}">관리자 페이지</a>
@@ -39,8 +40,6 @@
     {% endblock %}
 </main>
 
-<footer>
-</footer>
 
 </body>
 </html>
