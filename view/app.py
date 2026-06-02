@@ -16,8 +16,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-this")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-# 이미지 업로드 설정
-UPLOAD_FOLDER = os.path.join("static", "uploads")
+# 경로 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "recipes.db")
+
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -44,9 +47,10 @@ REPORT_STATUS = [
     "처리완료"
 ]
 
+
 # DB 연결
 def get_db():
-    conn = sqlite3.connect("recipes.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
     return conn, cursor
@@ -55,6 +59,7 @@ def get_db():
 # 한국 시간
 def get_kst_time():
     return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
+
 
 # 입력값 검증 / 인젝션 방어
 def clean_text(value, max_length=1000, allow_newline=True):
@@ -172,13 +177,13 @@ def escape_like_keyword(keyword):
 
     return keyword
 
+
 # 이미지 업로드 관련 함수
 def allowed_image_file(filename):
     if "." not in filename:
         return False
 
     extension = filename.rsplit(".", 1)[1].lower()
-
     return extension in ALLOWED_IMAGE_EXTENSIONS
 
 
@@ -211,6 +216,7 @@ def delete_recipe_image_file(filename):
 
     if os.path.exists(image_path):
         os.remove(image_path)
+
 
 # DB 초기화
 def init_db():
@@ -340,6 +346,7 @@ def login_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+
 # 관리자 필수
 def admin_required(func):
     @wraps(func)
@@ -360,7 +367,6 @@ def parse_ingredients(text):
         return []
 
     items = re.split(r"[,，\n/]+", text)
-
     result = []
 
     for item in items:
@@ -427,6 +433,7 @@ def calculate_ingredient_match(recipe_ingredients_text, my_ingredients_text):
     match_percent = int((matched_count / total_count) * 100)
 
     return match_percent, matched_count, total_count
+
 
 # 메인 페이지
 @app.route("/")
@@ -539,6 +546,7 @@ def index():
         current_user=current_user
     )
 
+
 # 회원가입
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -591,6 +599,7 @@ def register():
 
     return render_template("register.html")
 
+
 # 로그인
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -632,6 +641,7 @@ def logout():
     session.clear()
     return redirect(url_for("index"))
 
+
 # 내 레시피
 @app.route("/my-recipes")
 @login_required
@@ -662,6 +672,41 @@ def my_recipes():
         recipes=recipes,
         current_user=current_user
     )
+
+
+# 내가 추천한 레시피
+@app.route("/my-recommendations")
+@login_required
+def my_recommendations():
+    conn, cursor = get_db()
+
+    recipes = cursor.execute("""
+                             SELECT
+                                 recipes.*,
+                                 users.username,
+                                 (
+                                     SELECT COUNT(*)
+                                     FROM recipe_recommendations AS rr_count
+                                     WHERE rr_count.recipe_id = recipes.id
+                                 ) AS recommend_count,
+                                 recipe_recommendations.created_at AS recommended_at
+                             FROM recipe_recommendations
+                                      JOIN recipes ON recipe_recommendations.recipe_id = recipes.id
+                                      LEFT JOIN users ON recipes.user_id = users.id
+                             WHERE recipe_recommendations.user_id = ?
+                             ORDER BY recipe_recommendations.id DESC
+                             """, (session["user_id"],)).fetchall()
+
+    conn.close()
+
+    current_user = get_current_user()
+
+    return render_template(
+        "my_recommended_recipes.html",
+        recipes=recipes,
+        current_user=current_user
+    )
+
 
 # 레시피 추가
 @app.route("/add", methods=["GET", "POST"])
@@ -739,6 +784,7 @@ def add_recipe():
 
     return render_template("add.html")
 
+
 # 레시피 상세 보기
 @app.route("/recipe/<int:id>")
 def detail_recipe(id):
@@ -797,6 +843,7 @@ def detail_recipe(id):
         already_recommended=already_recommended
     )
 
+
 # 신고하기
 @app.route("/recipe/<int:recipe_id>/report", methods=["GET", "POST"])
 @login_required
@@ -816,7 +863,6 @@ def report_recipe(recipe_id):
 
     current_user = get_current_user()
 
-    # 본인 레시피는 신고 불가
     if current_user and recipe[8] == current_user[0]:
         conn.close()
         return redirect(url_for("detail_recipe", id=recipe_id))
@@ -882,6 +928,7 @@ def report_recipe(recipe_id):
         recipe=recipe,
         already_reported=existing_report is not None
     )
+
 
 # 추천 / 추천 취소
 @app.route("/recipe/<int:recipe_id>/recommend", methods=["POST"])
@@ -1093,6 +1140,7 @@ def delete_recipe(id):
 
     return redirect(url_for("index"))
 
+
 # 댓글 추가
 @app.route("/comment/add/<int:recipe_id>", methods=["POST"])
 @login_required
@@ -1134,6 +1182,7 @@ def add_comment(recipe_id):
     conn.close()
 
     return redirect(url_for("detail_recipe", id=recipe_id))
+
 
 # 댓글 수정
 @app.route("/comment/edit/<int:comment_id>", methods=["GET", "POST"])
@@ -1190,6 +1239,7 @@ def edit_comment(comment_id):
     conn.close()
 
     return render_template("edit_comment.html", comment=comment)
+
 
 # 댓글 삭제
 @app.route("/comment/delete/<int:comment_id>")
@@ -1317,7 +1367,8 @@ def update_report_status(report_id):
     conn.close()
 
     return redirect(url_for("admin_reports"))
+
 init_db()
 
-#if __name__ == "__main__":
-    #app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
