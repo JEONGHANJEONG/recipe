@@ -225,13 +225,23 @@ def init_db():
     cursor.execute("""
                    CREATE TABLE IF NOT EXISTS users (
                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                        username TEXT NOT NULL,
+                                                        username TEXT NOT NULL UNIQUE,
                                                         email TEXT NOT NULL UNIQUE,
                                                         password TEXT NOT NULL,
                                                         role TEXT DEFAULT 'user',
                                                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                    )
                    """)
+
+    # 이미 만들어진 users 테이블에도 username 중복 방지를 적용하기 위한 인덱스
+    # 단, 기존 DB에 중복 닉네임이 있으면 인덱스 생성이 실패할 수 있음
+    try:
+        cursor.execute("""
+                       CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username
+                           ON users(username)
+                       """)
+    except sqlite3.IntegrityError:
+        print("이미 중복된 닉네임이 있어서 username UNIQUE 인덱스를 만들 수 없습니다.")
 
     cursor.execute("""
                    CREATE TABLE IF NOT EXISTS recipes (
@@ -563,7 +573,7 @@ def register():
         password_check = request.form.get("password_check", "")
 
         if not username:
-            return render_template("register.html", error="이름을 입력해주세요.")
+            return render_template("register.html", error="닉네임을 입력해주세요.")
 
         if not email:
             return render_template("register.html", error="올바른 이메일 형식이 아닙니다.")
@@ -576,6 +586,15 @@ def register():
 
         conn, cursor = get_db()
 
+        existing_username = cursor.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+
+        if existing_username:
+            conn.close()
+            return render_template("register.html", error="이미 사용 중인 닉네임입니다.")
+
         existing_user = cursor.execute(
             "SELECT * FROM users WHERE email = ?",
             (email,)
@@ -587,12 +606,18 @@ def register():
 
         hashed_password = generate_password_hash(password)
 
-        cursor.execute("""
-                       INSERT INTO users (username, email, password, role)
-                       VALUES (?, ?, ?, ?)
-                       """, (username, email, hashed_password, "user"))
+        try:
+            cursor.execute("""
+                           INSERT INTO users (username, email, password, role)
+                           VALUES (?, ?, ?, ?)
+                           """, (username, email, hashed_password, "user"))
 
-        conn.commit()
+            conn.commit()
+
+        except sqlite3.IntegrityError:
+            conn.close()
+            return render_template("register.html", error="이미 사용 중인 닉네임 또는 이메일입니다.")
+
         conn.close()
 
         return redirect(url_for("login"))
@@ -1368,6 +1393,8 @@ def update_report_status(report_id):
 
     return redirect(url_for("admin_reports"))
 
+
+# PythonAnywhere에서도 DB 테이블이 생성되도록 실행
 init_db()
 
 if __name__ == "__main__":
