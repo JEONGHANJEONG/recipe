@@ -233,38 +233,38 @@ def init_db():
     conn, cursor = get_db()
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS users (
-                                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                        username TEXT NOT NULL UNIQUE,
-                                                        email TEXT NOT NULL UNIQUE,
-                                                        password TEXT NOT NULL,
-                                                        role TEXT DEFAULT 'user',
-                                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                   )
-                   """)
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            role TEXT DEFAULT 'user',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
 
     try:
         cursor.execute("""
-                       CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username
-                           ON users(username)
-                       """)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username
+            ON users(username)
+        """)
     except sqlite3.IntegrityError:
         print("이미 중복된 닉네임이 있어서 username UNIQUE 인덱스를 만들 수 없습니다.")
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS recipes (
-                                                          id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                          title TEXT NOT NULL,
-                                                          category TEXT,
-                                                          ingredients TEXT NOT NULL,
-                                                          instructions TEXT NOT NULL,
-                                                          cooking_time INTEGER,
-                                                          difficulty TEXT,
-                                                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                          user_id INTEGER,
-                                                          FOREIGN KEY (user_id) REFERENCES users(id)
-                       )
-                   """)
+        CREATE TABLE IF NOT EXISTS recipes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            category TEXT,
+            ingredients TEXT NOT NULL,
+            instructions TEXT NOT NULL,
+            cooking_time INTEGER,
+            difficulty TEXT,
+            created_at TEXT,
+            user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
 
     cursor.execute("PRAGMA table_info(recipes)")
     recipe_columns = [column[1] for column in cursor.fetchall()]
@@ -273,55 +273,55 @@ def init_db():
         cursor.execute("ALTER TABLE recipes ADD COLUMN user_id INTEGER")
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS comments (
-                                                           id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                           recipe_id INTEGER NOT NULL,
-                                                           user_id INTEGER NOT NULL,
-                                                           content TEXT NOT NULL,
-                                                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                           FOREIGN KEY (recipe_id) REFERENCES recipes(id),
-                       FOREIGN KEY (user_id) REFERENCES users(id)
-                       )
-                   """)
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS recipe_recommendations (
-                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                         recipe_id INTEGER NOT NULL,
-                                                                         user_id INTEGER NOT NULL,
-                                                                         created_at TEXT,
-                                                                         UNIQUE(recipe_id, user_id),
-                       FOREIGN KEY (recipe_id) REFERENCES recipes(id),
-                       FOREIGN KEY (user_id) REFERENCES users(id)
-                       )
-                   """)
+        CREATE TABLE IF NOT EXISTS recipe_recommendations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TEXT,
+            UNIQUE(recipe_id, user_id),
+            FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS recipe_images (
-                                                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                recipe_id INTEGER NOT NULL UNIQUE,
-                                                                image_filename TEXT NOT NULL,
-                                                                created_at TEXT,
-                                                                FOREIGN KEY (recipe_id) REFERENCES recipes(id)
-                       )
-                   """)
+        CREATE TABLE IF NOT EXISTS recipe_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL UNIQUE,
+            image_filename TEXT NOT NULL,
+            created_at TEXT,
+            FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+        )
+    """)
 
     cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS recipe_reports (
-                                                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                 recipe_id INTEGER NOT NULL,
-                                                                 reporter_id INTEGER NOT NULL,
-                                                                 reason TEXT NOT NULL,
-                                                                 detail TEXT NOT NULL,
-                                                                 status TEXT DEFAULT '접수',
-                                                                 created_at TEXT,
-                                                                 handled_at TEXT,
-                                                                 UNIQUE(recipe_id, reporter_id),
-                       FOREIGN KEY (recipe_id) REFERENCES recipes(id),
-                       FOREIGN KEY (reporter_id) REFERENCES users(id)
-                       )
-                   """)
+        CREATE TABLE IF NOT EXISTS recipe_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id INTEGER NOT NULL,
+            reporter_id INTEGER NOT NULL,
+            reason TEXT NOT NULL,
+            detail TEXT NOT NULL,
+            status TEXT DEFAULT '접수',
+            created_at TEXT,
+            handled_at TEXT,
+            UNIQUE(recipe_id, reporter_id),
+            FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+            FOREIGN KEY (reporter_id) REFERENCES users(id)
+        )
+    """)
 
     cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@example.com",))
     admin = cursor.fetchone()
@@ -330,9 +330,9 @@ def init_db():
         admin_password = generate_password_hash("admin1234")
 
         cursor.execute("""
-                       INSERT INTO users (username, email, password, role)
-                       VALUES (?, ?, ?, ?)
-                       """, ("관리자", "admin@example.com", admin_password, "admin"))
+            INSERT INTO users (username, email, password, role)
+            VALUES (?, ?, ?, ?)
+        """, ("관리자", "admin@example.com", admin_password, "admin"))
 
     conn.commit()
     conn.close()
@@ -421,64 +421,45 @@ def normalize_ingredient(text):
         return ""
 
     text = str(text).lower().strip()
-
-    # 괄호 안 내용 제거
     text = re.sub(r"\([^)]*\)", " ", text)
 
-    # 숫자 + 단위 제거
     text = re.sub(
         r"\d+(\.\d+)?\s*(g|kg|ml|l|개|큰술|작은술|컵|스푼|장|쪽|알|봉|캔|팩|줌|꼬집|그램|리터|모|t|tsp|tbsp)",
         " ",
         text
     )
 
-    # 특수문자 제거
     text = re.sub(r"[^가-힣a-zA-Z0-9\s]", " ", text)
 
-    # 불필요한 단어 제거
     for word in STOP_WORDS:
         text = text.replace(word, " ")
 
-    # 공백 제거
     text = re.sub(r"\s+", "", text)
 
     return text
 
 
 def split_ingredient_text(text):
-    """
-    쉼표가 있어도, 없어도 재료를 최대한 분리한다.
-    예:
-    - 김치, 돼지고기, 두부
-    - 김치 돼지고기 두부
-    - 김치 200g 돼지고기 100g 두부 1모
-    """
     if not text:
         return []
 
     text = str(text).lower()
-
-    # 괄호 안 내용 제거
     text = re.sub(r"\([^)]*\)", " ", text)
 
-    # 숫자 + 단위 제거
     text = re.sub(
         r"\d+(\.\d+)?\s*(g|kg|ml|l|개|큰술|작은술|컵|스푼|장|쪽|알|봉|캔|팩|줌|꼬집|그램|리터|모|t|tsp|tbsp)",
         " ",
         text
     )
 
-    # 쉼표, 줄바꿈, 슬래시를 구분자로 통일
     text = re.sub(r"[,，/\n\r]+", ",", text)
 
     result = []
-
     chunks = [chunk.strip() for chunk in text.split(",") if chunk.strip()]
 
     for chunk in chunks:
         found = []
 
-        # 긴 재료명부터 먼저 찾기
         for ingredient in sorted(COMMON_INGREDIENTS, key=len, reverse=True):
             normalized_common = normalize_ingredient(ingredient)
             normalized_chunk = normalize_ingredient(chunk)
@@ -499,7 +480,6 @@ def split_ingredient_text(text):
                     result.append(leftover)
 
         else:
-            # 사전에 없는 재료는 공백 기준으로 분리
             words = re.split(r"\s+", chunk.strip())
 
             for word in words:
@@ -508,7 +488,6 @@ def split_ingredient_text(text):
                 if len(normalized_word) >= 2:
                     result.append(word)
 
-    # 정규화 기준 중복 제거
     unique_result = []
     seen = set()
 
@@ -597,23 +576,21 @@ def index():
     )
 
     query = """
-            SELECT
-                recipes.*,
-                users.username,
-                (
-                    SELECT COUNT(*)
-                    FROM recipe_recommendations
-                    WHERE recipe_recommendations.recipe_id = recipes.id
-                ) AS recommend_count
-            FROM recipes
-                     LEFT JOIN users ON recipes.user_id = users.id
-            WHERE 1=1 \
-            """
+        SELECT
+            recipes.*,
+            users.username,
+            (
+                SELECT COUNT(*)
+                FROM recipe_recommendations
+                WHERE recipe_recommendations.recipe_id = recipes.id
+            ) AS recommend_count
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE 1=1
+    """
 
     params = []
 
-    # 검색어도 재료처럼 분리해서 검색
-    # 예: "김치 돼지고기" → 김치와 돼지고기를 각각 검색 조건으로 사용
     if keyword:
         keyword_parts = parse_ingredients(keyword)
 
@@ -741,9 +718,9 @@ def register():
 
         try:
             cursor.execute("""
-                           INSERT INTO users (username, email, password, role)
-                           VALUES (?, ?, ?, ?)
-                           """, (username, email, hashed_password, "user"))
+                INSERT INTO users (username, email, password, role)
+                VALUES (?, ?, ?, ?)
+            """, (username, email, hashed_password, "user"))
 
             conn.commit()
 
@@ -813,19 +790,19 @@ def my_recipes():
     conn, cursor = get_db()
 
     recipes = cursor.execute("""
-                             SELECT
-                                 recipes.*,
-                                 users.username,
-                                 (
-                                     SELECT COUNT(*)
-                                     FROM recipe_recommendations
-                                     WHERE recipe_recommendations.recipe_id = recipes.id
-                                 ) AS recommend_count
-                             FROM recipes
-                                      LEFT JOIN users ON recipes.user_id = users.id
-                             WHERE recipes.user_id = ?
-                             ORDER BY recipes.id DESC
-                             """, (session["user_id"],)).fetchall()
+        SELECT
+            recipes.*,
+            users.username,
+            (
+                SELECT COUNT(*)
+                FROM recipe_recommendations
+                WHERE recipe_recommendations.recipe_id = recipes.id
+            ) AS recommend_count
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE recipes.user_id = ?
+        ORDER BY recipes.id DESC
+    """, (session["user_id"],)).fetchall()
 
     conn.close()
 
@@ -847,21 +824,21 @@ def my_recommendations():
     conn, cursor = get_db()
 
     recipes = cursor.execute("""
-                             SELECT
-                                 recipes.*,
-                                 users.username,
-                                 (
-                                     SELECT COUNT(*)
-                                     FROM recipe_recommendations AS rr_count
-                                     WHERE rr_count.recipe_id = recipes.id
-                                 ) AS recommend_count,
-                                 recipe_recommendations.created_at AS recommended_at
-                             FROM recipe_recommendations
-                                      JOIN recipes ON recipe_recommendations.recipe_id = recipes.id
-                                      LEFT JOIN users ON recipes.user_id = users.id
-                             WHERE recipe_recommendations.user_id = ?
-                             ORDER BY recipe_recommendations.id DESC
-                             """, (session["user_id"],)).fetchall()
+        SELECT
+            recipes.*,
+            users.username,
+            (
+                SELECT COUNT(*)
+                FROM recipe_recommendations AS rr_count
+                WHERE rr_count.recipe_id = recipes.id
+            ) AS recommend_count,
+            recipe_recommendations.created_at AS recommended_at
+        FROM recipe_recommendations
+        JOIN recipes ON recipe_recommendations.recipe_id = recipes.id
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE recipe_recommendations.user_id = ?
+        ORDER BY recipe_recommendations.id DESC
+    """, (session["user_id"],)).fetchall()
 
     conn.close()
 
@@ -914,36 +891,37 @@ def add_recipe():
         image_file = request.files.get("recipe_image")
         image_filename = save_recipe_image(image_file)
 
+        now_kst = get_kst_time()
+
         conn, cursor = get_db()
 
         cursor.execute("""
-                       INSERT INTO recipes
-                       (title, category, ingredients, instructions, cooking_time, difficulty, user_id)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)
-                       """, (
-                           title,
-                           category,
-                           ingredients,
-                           instructions,
-                           cooking_time,
-                           difficulty,
-                           user_id
-                       ))
+            INSERT INTO recipes
+                (title, category, ingredients, instructions, cooking_time, difficulty, created_at, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            title,
+            category,
+            ingredients,
+            instructions,
+            cooking_time,
+            difficulty,
+            now_kst,
+            user_id
+        ))
 
         recipe_id = cursor.lastrowid
 
         if image_filename:
-            now_kst = get_kst_time()
-
             cursor.execute("""
-                           INSERT INTO recipe_images
-                               (recipe_id, image_filename, created_at)
-                           VALUES (?, ?, ?)
-                           """, (
-                               recipe_id,
-                               image_filename,
-                               now_kst
-                           ))
+                INSERT INTO recipe_images
+                    (recipe_id, image_filename, created_at)
+                VALUES (?, ?, ?)
+            """, (
+                recipe_id,
+                image_filename,
+                now_kst
+            ))
 
         conn.commit()
         conn.close()
@@ -961,40 +939,40 @@ def detail_recipe(id):
     conn, cursor = get_db()
 
     recipe = cursor.execute("""
-                            SELECT recipes.*, users.username
-                            FROM recipes
-                                     LEFT JOIN users ON recipes.user_id = users.id
-                            WHERE recipes.id = ?
-                            """, (id,)).fetchone()
+        SELECT recipes.*, users.username
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE recipes.id = ?
+    """, (id,)).fetchone()
 
     comments = cursor.execute("""
-                              SELECT comments.*, users.username
-                              FROM comments
-                                       LEFT JOIN users ON comments.user_id = users.id
-                              WHERE comments.recipe_id = ?
-                              ORDER BY comments.id DESC
-                              """, (id,)).fetchall()
+        SELECT comments.*, users.username
+        FROM comments
+        LEFT JOIN users ON comments.user_id = users.id
+        WHERE comments.recipe_id = ?
+        ORDER BY comments.id DESC
+    """, (id,)).fetchall()
 
     recipe_image = cursor.execute("""
-                                  SELECT *
-                                  FROM recipe_images
-                                  WHERE recipe_id = ?
-                                  """, (id,)).fetchone()
+        SELECT *
+        FROM recipe_images
+        WHERE recipe_id = ?
+    """, (id,)).fetchone()
 
     recommend_count = cursor.execute("""
-                                     SELECT COUNT(*)
-                                     FROM recipe_recommendations
-                                     WHERE recipe_id = ?
-                                     """, (id,)).fetchone()[0]
+        SELECT COUNT(*)
+        FROM recipe_recommendations
+        WHERE recipe_id = ?
+    """, (id,)).fetchone()[0]
 
     already_recommended = False
 
     if "user_id" in session:
         existing_recommend = cursor.execute("""
-                                            SELECT *
-                                            FROM recipe_recommendations
-                                            WHERE recipe_id = ? AND user_id = ?
-                                            """, (id, session["user_id"])).fetchone()
+            SELECT *
+            FROM recipe_recommendations
+            WHERE recipe_id = ? AND user_id = ?
+        """, (id, session["user_id"])).fetchone()
 
         if existing_recommend:
             already_recommended = True
@@ -1023,11 +1001,11 @@ def report_recipe(recipe_id):
     conn, cursor = get_db()
 
     recipe = cursor.execute("""
-                            SELECT recipes.*, users.username
-                            FROM recipes
-                                     LEFT JOIN users ON recipes.user_id = users.id
-                            WHERE recipes.id = ?
-                            """, (recipe_id,)).fetchone()
+        SELECT recipes.*, users.username
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE recipes.id = ?
+    """, (recipe_id,)).fetchone()
 
     if not recipe:
         conn.close()
@@ -1040,10 +1018,10 @@ def report_recipe(recipe_id):
         return redirect(url_for("detail_recipe", id=recipe_id))
 
     existing_report = cursor.execute("""
-                                     SELECT *
-                                     FROM recipe_reports
-                                     WHERE recipe_id = ? AND reporter_id = ?
-                                     """, (recipe_id, session["user_id"])).fetchone()
+        SELECT *
+        FROM recipe_reports
+        WHERE recipe_id = ? AND reporter_id = ?
+    """, (recipe_id, session["user_id"])).fetchone()
 
     if request.method == "POST":
         if existing_report:
@@ -1075,18 +1053,18 @@ def report_recipe(recipe_id):
         now_kst = get_kst_time()
 
         cursor.execute("""
-                       INSERT INTO recipe_reports
-                       (recipe_id, reporter_id, reason, detail, status, created_at, handled_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)
-                       """, (
-                           recipe_id,
-                           session["user_id"],
-                           reason,
-                           detail,
-                           "접수",
-                           now_kst,
-                           None
-                       ))
+            INSERT INTO recipe_reports
+                (recipe_id, reporter_id, reason, detail, status, created_at, handled_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            recipe_id,
+            session["user_id"],
+            reason,
+            detail,
+            "접수",
+            now_kst,
+            None
+        ))
 
         conn.commit()
         conn.close()
@@ -1120,25 +1098,25 @@ def recommend_recipe(recipe_id):
         return redirect(url_for("index"))
 
     existing_recommend = cursor.execute("""
-                                        SELECT *
-                                        FROM recipe_recommendations
-                                        WHERE recipe_id = ? AND user_id = ?
-                                        """, (recipe_id, session["user_id"])).fetchone()
+        SELECT *
+        FROM recipe_recommendations
+        WHERE recipe_id = ? AND user_id = ?
+    """, (recipe_id, session["user_id"])).fetchone()
 
     if existing_recommend:
         cursor.execute("""
-                       DELETE FROM recipe_recommendations
-                       WHERE recipe_id = ? AND user_id = ?
-                       """, (recipe_id, session["user_id"]))
+            DELETE FROM recipe_recommendations
+            WHERE recipe_id = ? AND user_id = ?
+        """, (recipe_id, session["user_id"]))
 
     else:
         now_kst = get_kst_time()
 
         cursor.execute("""
-                       INSERT INTO recipe_recommendations
-                           (recipe_id, user_id, created_at)
-                       VALUES (?, ?, ?)
-                       """, (recipe_id, session["user_id"], now_kst))
+            INSERT INTO recipe_recommendations
+                (recipe_id, user_id, created_at)
+            VALUES (?, ?, ?)
+        """, (recipe_id, session["user_id"], now_kst))
 
     conn.commit()
     conn.close()
@@ -1155,11 +1133,11 @@ def edit_recipe(id):
     conn, cursor = get_db()
 
     recipe = cursor.execute("""
-                            SELECT recipes.*, users.username
-                            FROM recipes
-                                     LEFT JOIN users ON recipes.user_id = users.id
-                            WHERE recipes.id = ?
-                            """, (id,)).fetchone()
+        SELECT recipes.*, users.username
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        WHERE recipes.id = ?
+    """, (id,)).fetchone()
 
     if not recipe:
         conn.close()
@@ -1172,10 +1150,10 @@ def edit_recipe(id):
         return redirect(url_for("detail_recipe", id=id))
 
     recipe_image = cursor.execute("""
-                                  SELECT *
-                                  FROM recipe_images
-                                  WHERE recipe_id = ?
-                                  """, (id,)).fetchone()
+        SELECT *
+        FROM recipe_images
+        WHERE recipe_id = ?
+    """, (id,)).fetchone()
 
     if request.method == "POST":
         title = clean_text(
@@ -1211,23 +1189,23 @@ def edit_recipe(id):
             )
 
         cursor.execute("""
-                       UPDATE recipes
-                       SET title = ?,
-                           category = ?,
-                           ingredients = ?,
-                           instructions = ?,
-                           cooking_time = ?,
-                           difficulty = ?
-                       WHERE id = ?
-                       """, (
-                           title,
-                           category,
-                           ingredients,
-                           instructions,
-                           cooking_time,
-                           difficulty,
-                           id
-                       ))
+            UPDATE recipes
+            SET title = ?,
+                category = ?,
+                ingredients = ?,
+                instructions = ?,
+                cooking_time = ?,
+                difficulty = ?
+            WHERE id = ?
+        """, (
+            title,
+            category,
+            ingredients,
+            instructions,
+            cooking_time,
+            difficulty,
+            id
+        ))
 
         image_file = request.files.get("recipe_image")
         new_image_filename = save_recipe_image(image_file)
@@ -1240,26 +1218,26 @@ def edit_recipe(id):
                 delete_recipe_image_file(old_image_filename)
 
                 cursor.execute("""
-                               UPDATE recipe_images
-                               SET image_filename = ?,
-                                   created_at = ?
-                               WHERE recipe_id = ?
-                               """, (
-                                   new_image_filename,
-                                   now_kst,
-                                   id
-                               ))
+                    UPDATE recipe_images
+                    SET image_filename = ?,
+                        created_at = ?
+                    WHERE recipe_id = ?
+                """, (
+                    new_image_filename,
+                    now_kst,
+                    id
+                ))
 
             else:
                 cursor.execute("""
-                               INSERT INTO recipe_images
-                                   (recipe_id, image_filename, created_at)
-                               VALUES (?, ?, ?)
-                               """, (
-                                   id,
-                                   new_image_filename,
-                                   now_kst
-                               ))
+                    INSERT INTO recipe_images
+                        (recipe_id, image_filename, created_at)
+                    VALUES (?, ?, ?)
+                """, (
+                    id,
+                    new_image_filename,
+                    now_kst
+                ))
 
         conn.commit()
         conn.close()
@@ -1299,10 +1277,10 @@ def delete_recipe(id):
         return redirect(url_for("detail_recipe", id=id))
 
     recipe_image = cursor.execute("""
-                                  SELECT *
-                                  FROM recipe_images
-                                  WHERE recipe_id = ?
-                                  """, (id,)).fetchone()
+        SELECT *
+        FROM recipe_images
+        WHERE recipe_id = ?
+    """, (id,)).fetchone()
 
     if recipe_image:
         delete_recipe_image_file(recipe_image[2])
@@ -1346,16 +1324,16 @@ def add_comment(recipe_id):
         now_kst = get_kst_time()
 
         cursor.execute("""
-                       INSERT INTO comments
-                           (recipe_id, user_id, content, created_at, updated_at)
-                       VALUES (?, ?, ?, ?, ?)
-                       """, (
-                           recipe_id,
-                           session["user_id"],
-                           content,
-                           now_kst,
-                           now_kst
-                       ))
+            INSERT INTO comments
+                (recipe_id, user_id, content, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            recipe_id,
+            session["user_id"],
+            content,
+            now_kst,
+            now_kst
+        ))
 
         conn.commit()
 
@@ -1373,11 +1351,11 @@ def edit_comment(comment_id):
     conn, cursor = get_db()
 
     comment = cursor.execute("""
-                             SELECT comments.*, users.username
-                             FROM comments
-                                      LEFT JOIN users ON comments.user_id = users.id
-                             WHERE comments.id = ?
-                             """, (comment_id,)).fetchone()
+        SELECT comments.*, users.username
+        FROM comments
+        LEFT JOIN users ON comments.user_id = users.id
+        WHERE comments.id = ?
+    """, (comment_id,)).fetchone()
 
     if not comment:
         conn.close()
@@ -1401,15 +1379,15 @@ def edit_comment(comment_id):
             now_kst = get_kst_time()
 
             cursor.execute("""
-                           UPDATE comments
-                           SET content = ?,
-                               updated_at = ?
-                           WHERE id = ?
-                           """, (
-                               content,
-                               now_kst,
-                               comment_id
-                           ))
+                UPDATE comments
+                SET content = ?,
+                    updated_at = ?
+                WHERE id = ?
+            """, (
+                content,
+                now_kst,
+                comment_id
+            ))
 
             conn.commit()
 
@@ -1465,32 +1443,32 @@ def admin_page():
     conn, cursor = get_db()
 
     users = cursor.execute("""
-                           SELECT id, username, email, role, created_at
-                           FROM users
-                           ORDER BY id DESC
-                           """).fetchall()
+        SELECT id, username, email, role, created_at
+        FROM users
+        ORDER BY id DESC
+    """).fetchall()
 
     recipes = cursor.execute("""
-                             SELECT
-                                 recipes.*,
-                                 users.username,
-                                 (
-                                     SELECT COUNT(*)
-                                     FROM recipe_recommendations
-                                     WHERE recipe_recommendations.recipe_id = recipes.id
-                                 ) AS recommend_count
-                             FROM recipes
-                                      LEFT JOIN users ON recipes.user_id = users.id
-                             ORDER BY recipes.id DESC
-                             """).fetchall()
+        SELECT
+            recipes.*,
+            users.username,
+            (
+                SELECT COUNT(*)
+                FROM recipe_recommendations
+                WHERE recipe_recommendations.recipe_id = recipes.id
+            ) AS recommend_count
+        FROM recipes
+        LEFT JOIN users ON recipes.user_id = users.id
+        ORDER BY recipes.id DESC
+    """).fetchall()
 
     comments = cursor.execute("""
-                              SELECT comments.*, users.username, recipes.title
-                              FROM comments
-                                       LEFT JOIN users ON comments.user_id = users.id
-                                       LEFT JOIN recipes ON comments.recipe_id = recipes.id
-                              ORDER BY comments.id DESC
-                              """).fetchall()
+        SELECT comments.*, users.username, recipes.title
+        FROM comments
+        LEFT JOIN users ON comments.user_id = users.id
+        LEFT JOIN recipes ON comments.recipe_id = recipes.id
+        ORDER BY comments.id DESC
+    """).fetchall()
 
     conn.close()
 
@@ -1511,17 +1489,17 @@ def admin_reports():
     conn, cursor = get_db()
 
     reports = cursor.execute("""
-                             SELECT
-                                 recipe_reports.*,
-                                 recipes.title,
-                                 reporter.username,
-                                 writer.username
-                             FROM recipe_reports
-                                      LEFT JOIN recipes ON recipe_reports.recipe_id = recipes.id
-                                      LEFT JOIN users AS reporter ON recipe_reports.reporter_id = reporter.id
-                                      LEFT JOIN users AS writer ON recipes.user_id = writer.id
-                             ORDER BY recipe_reports.id DESC
-                             """).fetchall()
+        SELECT
+            recipe_reports.*,
+            recipes.title,
+            reporter.username,
+            writer.username
+        FROM recipe_reports
+        LEFT JOIN recipes ON recipe_reports.recipe_id = recipes.id
+        LEFT JOIN users AS reporter ON recipe_reports.reporter_id = reporter.id
+        LEFT JOIN users AS writer ON recipes.user_id = writer.id
+        ORDER BY recipe_reports.id DESC
+    """).fetchall()
 
     conn.close()
 
@@ -1543,20 +1521,21 @@ def update_report_status(report_id):
     conn, cursor = get_db()
 
     cursor.execute("""
-                   UPDATE recipe_reports
-                   SET status = ?,
-                       handled_at = ?
-                   WHERE id = ?
-                   """, (
-                       status,
-                       now_kst,
-                       report_id
-                   ))
+        UPDATE recipe_reports
+        SET status = ?,
+            handled_at = ?
+        WHERE id = ?
+    """, (
+        status,
+        now_kst,
+        report_id
+    ))
 
     conn.commit()
     conn.close()
 
     return redirect(url_for("admin_reports"))
+
 
 init_db()
 
