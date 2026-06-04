@@ -17,11 +17,12 @@
 
 <form method="POST" action="{{ url_for('register') }}" class="recipe-form">
 
-  <label for="username">이름</label>
+  <label for="username">닉네임</label>
   <input type="text"
          id="username"
          name="username"
-         placeholder="예: 홍길동"
+         placeholder="예: 감자돌이"
+         maxlength="30"
          required>
 
   <label for="email">이메일</label>
@@ -29,22 +30,27 @@
          id="email"
          name="email"
          placeholder="예: user@example.com"
+         maxlength="100"
          required>
 
   <label for="password">비밀번호</label>
   <input type="password"
          id="password"
          name="password"
+         minlength="4"
+         maxlength="50"
          required>
 
   <label for="password_check">비밀번호 확인</label>
   <input type="password"
          id="password_check"
          name="password_check"
+         minlength="4"
+         maxlength="50"
          required>
 
   <div class="form-buttons">
-    <button type="submit" class="btn">완료</button>
+    <button type="submit" class="btn">회원가입</button>
     <a href="{{ url_for('login') }}" class="btn cancel">로그인으로</a>
   </div>
 
