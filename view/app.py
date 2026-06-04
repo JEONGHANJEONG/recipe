@@ -48,7 +48,9 @@ REPORT_STATUS = [
 ]
 
 
+# =========================
 # DB 연결
+# =========================
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
@@ -56,12 +58,16 @@ def get_db():
     return conn, cursor
 
 
+# =========================
 # 한국 시간
+# =========================
 def get_kst_time():
     return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
 
 
+# =========================
 # 입력값 검증 / 인젝션 방어
+# =========================
 def clean_text(value, max_length=1000, allow_newline=True):
     if value is None:
         return ""
@@ -178,7 +184,9 @@ def escape_like_keyword(keyword):
     return keyword
 
 
+# =========================
 # 이미지 업로드 관련 함수
+# =========================
 def allowed_image_file(filename):
     if "." not in filename:
         return False
@@ -218,7 +226,9 @@ def delete_recipe_image_file(filename):
         os.remove(image_path)
 
 
+# =========================
 # DB 초기화
+# =========================
 def init_db():
     conn, cursor = get_db()
 
@@ -233,8 +243,6 @@ def init_db():
                    )
                    """)
 
-    # 이미 만들어진 users 테이블에도 username 중복 방지를 적용하기 위한 인덱스
-    # 단, 기존 DB에 중복 닉네임이 있으면 인덱스 생성이 실패할 수 있음
     try:
         cursor.execute("""
                        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username
@@ -330,7 +338,9 @@ def init_db():
     conn.close()
 
 
+# =========================
 # 현재 로그인 사용자
+# =========================
 def get_current_user():
     if "user_id" not in session:
         return None
@@ -347,7 +357,9 @@ def get_current_user():
     return user
 
 
+# =========================
 # 로그인 필수
+# =========================
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -357,7 +369,9 @@ def login_required(func):
     return wrapper
 
 
+# =========================
 # 관리자 필수
+# =========================
 def admin_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -371,38 +385,145 @@ def admin_required(func):
     return wrapper
 
 
-# 재료 비교 함수
-def parse_ingredients(text):
-    if not text:
-        return []
+# =========================
+# 재료 비교 함수 개선 버전
+# =========================
+STOP_WORDS = {
+    "약간", "조금", "적당량", "취향껏", "한줌", "한 줌",
+    "소량", "대량", "필요시", "선택", "선택사항",
+    "넣기", "넣어주세요", "준비", "사용"
+}
 
-    items = re.split(r"[,，\n/]+", text)
-    result = []
-
-    for item in items:
-        item = item.strip()
-
-        if item:
-            result.append(item)
-
-    return result
+COMMON_INGREDIENTS = [
+    "돼지고기", "소고기", "닭고기", "오리고기",
+    "다진마늘", "마늘", "양파", "대파", "쪽파", "파",
+    "김치", "두부", "감자", "당근", "애호박", "호박",
+    "버섯", "표고버섯", "새송이버섯", "팽이버섯",
+    "고추", "청양고추", "홍고추", "계란", "달걀",
+    "밥", "면", "라면", "우동면", "소면", "스파게티면",
+    "떡", "어묵", "참치", "햄", "스팸", "베이컨",
+    "새우", "오징어", "고등어", "연어", "조개", "바지락",
+    "멸치", "다시마", "콩나물", "숙주", "시금치",
+    "상추", "깻잎", "배추", "양배추", "무", "오이",
+    "토마토", "치즈", "우유", "버터", "생크림",
+    "밀가루", "부침가루", "튀김가루", "빵가루",
+    "고추장", "된장", "간장", "국간장", "소금", "설탕",
+    "후추", "고춧가루", "참기름", "들기름", "식용유",
+    "올리브유", "식초", "맛술", "미림", "올리고당",
+    "꿀", "물엿", "깨", "통깨", "참깨",
+    "마요네즈", "케첩", "굴소스", "돈까스소스",
+    "토마토소스", "카레가루", "카레", "물", "육수"
+]
 
 
 def normalize_ingredient(text):
-    text = text.lower()
-    text = text.strip()
+    if not text:
+        return ""
 
-    text = re.sub(r"\([^)]*\)", "", text)
+    text = str(text).lower().strip()
 
+    # 괄호 안 내용 제거
+    text = re.sub(r"\([^)]*\)", " ", text)
+
+    # 숫자 + 단위 제거
     text = re.sub(
-        r"[0-9]+(\.[0-9]+)?\s*(g|kg|ml|l|개|큰술|작은술|컵|스푼|장|쪽|알|봉|캔|팩|줌|꼬집|그램|리터|모)?",
-        "",
+        r"\d+(\.\d+)?\s*(g|kg|ml|l|개|큰술|작은술|컵|스푼|장|쪽|알|봉|캔|팩|줌|꼬집|그램|리터|모|t|tsp|tbsp)",
+        " ",
         text
     )
 
+    # 특수문자 제거
+    text = re.sub(r"[^가-힣a-zA-Z0-9\s]", " ", text)
+
+    # 불필요한 단어 제거
+    for word in STOP_WORDS:
+        text = text.replace(word, " ")
+
+    # 공백 제거
     text = re.sub(r"\s+", "", text)
 
     return text
+
+
+def split_ingredient_text(text):
+    """
+    쉼표가 있어도, 없어도 재료를 최대한 분리한다.
+    예:
+    - 김치, 돼지고기, 두부
+    - 김치 돼지고기 두부
+    - 김치 200g 돼지고기 100g 두부 1모
+    """
+    if not text:
+        return []
+
+    text = str(text).lower()
+
+    # 괄호 안 내용 제거
+    text = re.sub(r"\([^)]*\)", " ", text)
+
+    # 숫자 + 단위 제거
+    text = re.sub(
+        r"\d+(\.\d+)?\s*(g|kg|ml|l|개|큰술|작은술|컵|스푼|장|쪽|알|봉|캔|팩|줌|꼬집|그램|리터|모|t|tsp|tbsp)",
+        " ",
+        text
+    )
+
+    # 쉼표, 줄바꿈, 슬래시를 구분자로 통일
+    text = re.sub(r"[,，/\n\r]+", ",", text)
+
+    result = []
+
+    chunks = [chunk.strip() for chunk in text.split(",") if chunk.strip()]
+
+    for chunk in chunks:
+        found = []
+
+        # 긴 재료명부터 먼저 찾기
+        for ingredient in sorted(COMMON_INGREDIENTS, key=len, reverse=True):
+            normalized_common = normalize_ingredient(ingredient)
+            normalized_chunk = normalize_ingredient(chunk)
+
+            if normalized_common and normalized_common in normalized_chunk:
+                found.append(ingredient)
+                chunk = chunk.replace(ingredient, " ")
+
+        if found:
+            result.extend(found)
+
+            leftovers = re.split(r"\s+", chunk.strip())
+
+            for leftover in leftovers:
+                normalized_leftover = normalize_ingredient(leftover)
+
+                if len(normalized_leftover) >= 2:
+                    result.append(leftover)
+
+        else:
+            # 사전에 없는 재료는 공백 기준으로 분리
+            words = re.split(r"\s+", chunk.strip())
+
+            for word in words:
+                normalized_word = normalize_ingredient(word)
+
+                if len(normalized_word) >= 2:
+                    result.append(word)
+
+    # 정규화 기준 중복 제거
+    unique_result = []
+    seen = set()
+
+    for item in result:
+        normalized_item = normalize_ingredient(item)
+
+        if normalized_item and normalized_item not in seen:
+            seen.add(normalized_item)
+            unique_result.append(item.strip())
+
+    return unique_result
+
+
+def parse_ingredients(text):
+    return split_ingredient_text(text)
 
 
 def is_ingredient_match(recipe_ingredient, my_ingredient):
@@ -445,7 +566,9 @@ def calculate_ingredient_match(recipe_ingredients_text, my_ingredients_text):
     return match_percent, matched_count, total_count
 
 
+# =========================
 # 메인 페이지
+# =========================
 @app.route("/")
 def index():
     keyword = clean_text(
@@ -489,19 +612,27 @@ def index():
 
     params = []
 
+    # 검색어도 재료처럼 분리해서 검색
+    # 예: "김치 돼지고기" → 김치와 돼지고기를 각각 검색 조건으로 사용
     if keyword:
-        query += """
-            AND (
-                recipes.title LIKE ? ESCAPE '\\'
-                OR recipes.ingredients LIKE ? ESCAPE '\\'
-                OR recipes.instructions LIKE ? ESCAPE '\\'
-            )
-        """
+        keyword_parts = parse_ingredients(keyword)
 
-        safe_keyword = escape_like_keyword(keyword)
-        search_keyword = f"%{safe_keyword}%"
+        if not keyword_parts:
+            keyword_parts = [keyword]
 
-        params.extend([search_keyword, search_keyword, search_keyword])
+        for part in keyword_parts:
+            safe_keyword = escape_like_keyword(part)
+            search_keyword = f"%{safe_keyword}%"
+
+            query += """
+                AND (
+                    recipes.title LIKE ? ESCAPE '\\'
+                    OR recipes.ingredients LIKE ? ESCAPE '\\'
+                    OR recipes.instructions LIKE ? ESCAPE '\\'
+                )
+            """
+
+            params.extend([search_keyword, search_keyword, search_keyword])
 
     if category:
         query += " AND recipes.category = ?"
@@ -557,7 +688,9 @@ def index():
     )
 
 
+# =========================
 # 회원가입
+# =========================
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -625,7 +758,9 @@ def register():
     return render_template("register.html")
 
 
+# =========================
 # 로그인
+# =========================
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -660,14 +795,18 @@ def login():
     return render_template("login.html")
 
 
+# =========================
 # 로그아웃
+# =========================
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("index"))
 
 
+# =========================
 # 내 레시피
+# =========================
 @app.route("/my-recipes")
 @login_required
 def my_recipes():
@@ -699,7 +838,9 @@ def my_recipes():
     )
 
 
+# =========================
 # 내가 추천한 레시피
+# =========================
 @app.route("/my-recommendations")
 @login_required
 def my_recommendations():
@@ -733,7 +874,9 @@ def my_recommendations():
     )
 
 
+# =========================
 # 레시피 추가
+# =========================
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add_recipe():
@@ -810,7 +953,9 @@ def add_recipe():
     return render_template("add.html")
 
 
+# =========================
 # 레시피 상세 보기
+# =========================
 @app.route("/recipe/<int:id>")
 def detail_recipe(id):
     conn, cursor = get_db()
@@ -869,7 +1014,9 @@ def detail_recipe(id):
     )
 
 
+# =========================
 # 신고하기
+# =========================
 @app.route("/recipe/<int:recipe_id>/report", methods=["GET", "POST"])
 @login_required
 def report_recipe(recipe_id):
@@ -955,7 +1102,9 @@ def report_recipe(recipe_id):
     )
 
 
+# =========================
 # 추천 / 추천 취소
+# =========================
 @app.route("/recipe/<int:recipe_id>/recommend", methods=["POST"])
 @login_required
 def recommend_recipe(recipe_id):
@@ -997,7 +1146,9 @@ def recommend_recipe(recipe_id):
     return redirect(url_for("detail_recipe", id=recipe_id))
 
 
+# =========================
 # 레시피 수정
+# =========================
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit_recipe(id):
@@ -1124,7 +1275,9 @@ def edit_recipe(id):
     )
 
 
+# =========================
 # 레시피 삭제
+# =========================
 @app.route("/delete/<int:id>")
 @login_required
 def delete_recipe(id):
@@ -1166,7 +1319,9 @@ def delete_recipe(id):
     return redirect(url_for("index"))
 
 
+# =========================
 # 댓글 추가
+# =========================
 @app.route("/comment/add/<int:recipe_id>", methods=["POST"])
 @login_required
 def add_comment(recipe_id):
@@ -1209,7 +1364,9 @@ def add_comment(recipe_id):
     return redirect(url_for("detail_recipe", id=recipe_id))
 
 
+# =========================
 # 댓글 수정
+# =========================
 @app.route("/comment/edit/<int:comment_id>", methods=["GET", "POST"])
 @login_required
 def edit_comment(comment_id):
@@ -1266,7 +1423,9 @@ def edit_comment(comment_id):
     return render_template("edit_comment.html", comment=comment)
 
 
+# =========================
 # 댓글 삭제
+# =========================
 @app.route("/comment/delete/<int:comment_id>")
 @login_required
 def delete_comment(comment_id):
@@ -1297,7 +1456,9 @@ def delete_comment(comment_id):
     return redirect(url_for("detail_recipe", id=recipe_id))
 
 
+# =========================
 # 관리자 페이지
+# =========================
 @app.route("/admin")
 @admin_required
 def admin_page():
@@ -1341,7 +1502,9 @@ def admin_page():
     )
 
 
+# =========================
 # 관리자 신고 목록
+# =========================
 @app.route("/admin/reports")
 @admin_required
 def admin_reports():
@@ -1368,7 +1531,9 @@ def admin_reports():
     )
 
 
+# =========================
 # 관리자 신고 상태 변경
+# =========================
 @app.route("/admin/reports/<int:report_id>/status", methods=["POST"])
 @admin_required
 def update_report_status(report_id):
@@ -1393,8 +1558,6 @@ def update_report_status(report_id):
 
     return redirect(url_for("admin_reports"))
 
-
-# PythonAnywhere에서도 DB 테이블이 생성되도록 실행
 init_db()
 
 if __name__ == "__main__":
